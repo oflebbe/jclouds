@@ -58,7 +58,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableMultimap.Builder;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingOutputStream;
 import com.google.inject.Inject;
 
@@ -295,8 +294,12 @@ public class JavaUrlHttpCommandExecutorService extends BaseHttpCommandExecutorSe
       CountingOutputStream out = new CountingOutputStream(connection.getOutputStream());
       InputStream is = payload.openStream();
       try {
-         ByteStreams.copy(is, out);
-      } catch (IOException e) {
+        byte[] buffer = new byte[1024 * 1024];
+	int len;
+	while ((len = is.read(buffer)) != -1) {
+	    out.write(buffer, 0, len);
+	}
+	      } catch (IOException e) {
          logger.error(e, "error after writing %d/%s bytes to %s", out.getCount(), lengthDesc, connection.getURL());
          throw e;
       } finally {
